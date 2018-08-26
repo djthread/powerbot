@@ -1,0 +1,1 @@
+alias Powerbot.{Sparky, P12}
