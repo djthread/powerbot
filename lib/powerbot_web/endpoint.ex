@@ -1,8 +1,6 @@
 defmodule PowerbotWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :powerbot
 
-  socket "/socket", PowerbotWeb.UserSocket
-
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phoenix.digest
@@ -28,14 +26,6 @@ defmodule PowerbotWeb.Endpoint do
 
   plug Plug.MethodOverride
   plug Plug.Head
-
-  # The session will be stored in the cookie and signed,
-  # this means its contents can be read but not tampered with.
-  # Set :encryption_salt if you would also like to encrypt it.
-  plug Plug.Session,
-    store: :cookie,
-    key: "_powerbot_key",
-    signing_salt: "R0ZIi8Op"
 
   plug PowerbotWeb.Router
 

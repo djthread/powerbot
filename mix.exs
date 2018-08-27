@@ -39,7 +39,8 @@ defmodule Powerbot.Mixfile do
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:ex_config, git: "https://github.com/djthread/ex_config.git"},
-      {:tesla, "~> 1.0.0"}
+      {:tesla, "~> 1.0.0"},
+      {:distillery, "~> 2.0"}
     ]
   end
 end
