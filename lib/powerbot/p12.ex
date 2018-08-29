@@ -23,6 +23,7 @@ defmodule Powerbot.P12 do
       z, nil -> Logger.error("Wth is zone #{z}¿")
     end)
   end
+
   def off(z), do: off([z])
 
   def on(zones) when is_list(zones) do
@@ -32,6 +33,7 @@ defmodule Powerbot.P12 do
       z, nil -> Logger.error("Wth is zone #{z}¿")
     end)
   end
+
   def on(z), do: on([z])
 
   def do_toggler(zones, fun) do

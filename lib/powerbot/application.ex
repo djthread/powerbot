@@ -9,7 +9,7 @@ defmodule Powerbot.Application do
     # Define workers and child supervisors to be supervised
     children = [
       # Start the endpoint when the application starts
-      supervisor(PowerbotWeb.Endpoint, []),
+      supervisor(PowerbotWeb.Endpoint, [])
       # Start your own worker by calling: Powerbot.Worker.start_link(arg1, arg2, arg3)
       # worker(Powerbot.Worker, [arg1, arg2, arg3]),
     ]
