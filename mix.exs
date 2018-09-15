@@ -40,6 +40,7 @@ defmodule Powerbot.Mixfile do
       {:cowboy, "~> 1.0"},
       {:ex_config, git: "https://github.com/djthread/ex_config.git"},
       {:tesla, "~> 1.0.0"},
+      {:websockex, "~> 0.4.0"},
       {:distillery, "~> 2.0"}
     ]
   end

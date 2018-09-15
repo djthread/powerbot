@@ -44,10 +44,17 @@ defmodule Powerbot.P12 do
     end)
   end
 
+  defp z_to_a(0), do: :power
   defp z_to_a(1), do: :zone1
   defp z_to_a(2), do: :zone2
   defp z_to_a(3), do: :zone3
   defp z_to_a(4), do: :zone4
+
+  defp z_to_a("0"), do: :power
+  defp z_to_a("1"), do: :zone1
+  defp z_to_a("2"), do: :zone2
+  defp z_to_a("3"), do: :zone3
+  defp z_to_a("4"), do: :zone4
 
   defp status_from_xml(xml) do
     Status

@@ -20,7 +20,11 @@ config :logger, :console,
 
 config :powerbot, :sparky,
   host: "sparky.threadbox.net",
-  delay_shutdown: 5
+  delay_shutdown: 8
+
+config :powerbot, :roon,
+  host: "localhost",
+  port: 8080
 
 config :powerbot, :p12, host: "p12.threadbox.net"
 

@@ -64,6 +64,7 @@ ARG APP_NAME
 RUN apk update && \
     apk add --no-cache \
       bash \
+      openssh-client \
       openssl-dev
 
 ENV REPLACE_OS_VARS=true \
@@ -72,5 +73,7 @@ ENV REPLACE_OS_VARS=true \
 WORKDIR /opt/app
 
 COPY --from=builder /opt/built .
+
+COPY assets/powerbot /root/.ssh/id_rsa
 
 CMD trap 'exit' INT; /opt/app/bin/${APP_NAME} foreground

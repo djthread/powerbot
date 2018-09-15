@@ -23,6 +23,11 @@ defmodule PowerbotWeb.Router do
   scope "/api", PowerbotWeb do
     pipe_through(:api)
 
+    scope "/system" do
+      post("/on", SystemController, :on)
+      post("/off", SystemController, :off)
+    end
+
     scope "/p12" do
       get("/status", P12Controller, :status)
       post("/on/:zones", P12Controller, :on)
@@ -30,7 +35,7 @@ defmodule PowerbotWeb.Router do
     end
 
     scope "/sparky" do
-      post("/shutdown", SparkyController, :shutdown)
+      post("/poweroff", SparkyController, :poweroff)
     end
   end
 end
