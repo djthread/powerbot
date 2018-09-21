@@ -1,3 +1,4 @@
 defmodule Config do
-  use ExConfig, app: :powerbot, sections: [:sparky, :p12]
+  @moduledoc "Config value getter"
+  use ExConfig, app: :powerbot, sections: [:sparky, :p12, :roon]
 end

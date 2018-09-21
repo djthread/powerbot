@@ -1,7 +1,6 @@
 defmodule PowerbotWeb.SystemController do
   use PowerbotWeb, :controller
-
-  alias Powerbot.{Sparky, P12}
+  alias Powerbot.{P12, Sparky}
 
   @delay_shutdown Config.sparky!(:delay_shutdown)
 

@@ -1,11 +1,5 @@
-# This file is responsible for configuring your application
-# and its dependencies with the aid of the Mix.Config module.
-#
-# This configuration file is loaded before any dependency and
-# is restricted to this project.
 use Mix.Config
 
-# Configures the endpoint
 config :powerbot, PowerbotWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base:
@@ -13,7 +7,6 @@ config :powerbot, PowerbotWeb.Endpoint,
   render_errors: [view: PowerbotWeb.ErrorView, accepts: ~w(html json)],
   pubsub: [name: Powerbot.PubSub, adapter: Phoenix.PubSub.PG2]
 
-# Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:user_id]
@@ -24,6 +17,13 @@ config :powerbot, :sparky,
 
 config :powerbot, :p12, host: "p12.threadbox.net"
 
-# Import environment specific config. This must remain at the bottom
-# of this file so it overrides the configuration defined above.
+config :powerbot, :roon,
+  base_url: "http://sparky.threadbox.net:3001",
+  find_zone_delay: 10,
+  zones: [:dave, :da_dave],
+  zone_map: %{
+    dave: "1601f06ee3ecdab4007f17fc1f92c20112ff",
+    da_dave: "160105d2151b25b726cf541876d70bff6c23"
+  }
+
 import_config "#{Mix.env()}.exs"

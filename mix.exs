@@ -9,7 +9,8 @@ defmodule Powerbot.Mixfile do
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      aliases: aliases()
     ]
   end
 
@@ -40,7 +41,15 @@ defmodule Powerbot.Mixfile do
       {:cowboy, "~> 1.0"},
       {:ex_config, git: "https://github.com/djthread/ex_config.git"},
       {:tesla, "~> 1.0.0"},
-      {:distillery, "~> 2.0"}
+      {:distillery, "~> 2.0"},
+      {:jason, "~> 1.1"},
+      {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false}
+    ]
+  end
+
+  defp aliases do
+    [
+      lint: "credo --strict"
     ]
   end
 end

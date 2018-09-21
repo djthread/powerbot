@@ -7,6 +7,7 @@ defmodule Powerbot.P12 do
   require Logger
 
   defmodule Status do
+    @moduledoc "Status struct"
     defstruct ~w(power zone1 zone2 zone3 zone4)a
   end
 
