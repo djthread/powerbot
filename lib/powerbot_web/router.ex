@@ -37,5 +37,11 @@ defmodule PowerbotWeb.Router do
     scope "/sparky" do
       post("/poweroff", SparkyController, :poweroff)
     end
+
+    scope "/roon" do
+      post("/play-pause", RoonController, :play_pause)
+      post("/next", RoonController, :next)
+      post("/previous", RoonController, :previous)
+    end
   end
 end

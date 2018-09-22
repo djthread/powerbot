@@ -2,6 +2,7 @@ defmodule Powerbot.Rooner do
   @moduledoc """
   Tracks the zone_id I want to control.
   """
+  alias Powerbot.RoonClient
 
   @zones Config.roon!(:zones)
   @zone_map Config.roon!(:zone_map)
@@ -36,7 +37,7 @@ defmodule Powerbot.Rooner do
   end
 
   defp find_zone do
-    with {:ok, %{"zones" => json}} <- RoonClient.list_zones(),
+    with {:ok, %{"zones" => zones}} <- RoonClient.list_zones(),
          {:ok, zone} <- first_present_zone(zones, @zones) do
       zone
     else
