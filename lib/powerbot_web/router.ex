@@ -21,27 +21,28 @@ defmodule PowerbotWeb.Router do
 
   # Other scopes may use custom stacks.
   scope "/api", PowerbotWeb do
-    pipe_through(:api)
+    pipe_through :api
 
     scope "/system" do
-      post("/on", SystemController, :on)
-      post("/off", SystemController, :off)
+      post "/on", SystemController, :on
+      post "/off", SystemController, :off
     end
 
     scope "/p12" do
-      get("/status", P12Controller, :status)
-      post("/on/:zones", P12Controller, :on)
-      post("/off/:zones", P12Controller, :off)
+      get "/status", P12Controller, :status
+      post "/on/:zones", P12Controller, :on
+      post "/off/:zones", P12Controller, :off
     end
 
     scope "/sparky" do
-      post("/poweroff", SparkyController, :poweroff)
+      post "/poweroff", SparkyController, :poweroff
     end
 
     scope "/roon" do
-      post("/play-pause", RoonController, :play_pause)
-      post("/next", RoonController, :next)
-      post("/previous", RoonController, :previous)
+      post "/zone", RoonController, :zone
+      post "/play-pause", RoonController, :play_pause
+      post "/next", RoonController, :next
+      post "/previous", RoonController, :previous
     end
   end
 end

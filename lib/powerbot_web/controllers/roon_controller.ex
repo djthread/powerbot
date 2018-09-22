@@ -4,6 +4,11 @@ defmodule PowerbotWeb.RoonController do
   use PowerbotWeb, :controller
   alias Powerbot.RoonClient
 
+  def zone(conn, _) do
+    {:ok, ret} = Rooner.zone_id()
+    json(conn, ret)
+  end
+
   def play_pause(conn, _) do
     {:ok, ret} = RoonClient.play_pause()
     json(conn, ret)

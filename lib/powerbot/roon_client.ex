@@ -5,15 +5,16 @@ defmodule Powerbot.RoonClient do
   """
   alias Powerbot.Rooner
 
-  @base_url Config.roon!(:base_url)
   @zone_map Config.roon!(:zone_map)
 
   def list_zones do
-    with {:ok, env} <- "/listZones" |> url() |> Tesla.get(),
+    url = url("/listZones")
+
+    with {:ok, env} <- Tesla.get(url),
          %{status: 200, body: body} <- env do
       Jason.decode(body)
     else
-      bad -> {:error, "Bad news: #{inspect(bad)}"}
+      bad -> {:error, "Bad news calling #{url}: #{inspect(bad)}"}
     end
   end
 
@@ -40,6 +41,7 @@ defmodule Powerbot.RoonClient do
 
   defp url("/" <> path, zone_id \\ nil) do
     zid_part = zone_id && "?zoneId=#{zone_id}"
-    "#{@base_url}/roonAPI/#{path}#{zid_part}"
+    base_url = Config.roon!(:base_url)
+    "#{base_url}/roonAPI/#{path}#{zid_part}"
   end
 end

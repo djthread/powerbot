@@ -3,6 +3,7 @@ defmodule Powerbot.Rooner do
   Tracks the zone_id I want to control.
   """
   alias Powerbot.RoonClient
+  require Logger
 
   @zones Config.roon!(:zones)
   @zone_map Config.roon!(:zone_map)
@@ -30,9 +31,15 @@ defmodule Powerbot.Rooner do
     {:reply, @zone_map[zone], state}
   end
 
-  def handle_info(:find_zone, state) do
-    state = Map.put(state, :zone, find_zone())
+  def handle_info(:find_zone, %{zone: old_zone} = state) do
+    new_zone = find_zone()
+    state = Map.put(state, :zone, new_zone)
+
+    if new_zone != old_zone,
+      do: Logger.info("Rooner: New zone: #{new_zone}")
+
     Process.send_after(self(), :find_zone, @find_zone_delay * 1_000)
+
     {:noreply, state}
   end
 
@@ -41,7 +48,12 @@ defmodule Powerbot.Rooner do
          {:ok, zone} <- first_present_zone(zones, @zones) do
       zone
     else
-      :not_found -> nil
+      :not_found ->
+        nil
+
+      {:error, msg} ->
+        Logger.error("Rooner.find_zone fail: #{msg}")
+        nil
     end
   end
 
