@@ -25,3 +25,9 @@ rund: ## Run the app, daemonized, in Docker
 		--expose 8810 -p 8810:8810 \
         --network="bridge" \
 		--rm -it $(APP_NAME):latest
+
+runda: ## Run the app, daemonized, in Docker, restart=(A)lways
+	docker run -d --env-file config/docker.env \
+        --restart=always \
+		--expose 8810 -p 8810:8810 \
+		-it $(APP_NAME):latest

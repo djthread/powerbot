@@ -51,9 +51,11 @@ release :powerbot do
     :runtime_tools
   ]
   set config_providers: [
+    # {Toml.Provider, [path: "${RELEASE_ROOT_DIR}/config.toml"]}
     {Mix.Releases.Config.Providers.Elixir, ["${RELEASE_ROOT_DIR}/etc/config.exs"]}
   ]
   set overlays: [
+    # {:copy, "config/defaults.toml", "config.toml"}
     {:copy, "rel/config/config.exs", "etc/config.exs"}
   ]
 end

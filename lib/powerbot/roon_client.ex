@@ -5,8 +5,6 @@ defmodule Powerbot.RoonClient do
   """
   alias Powerbot.Rooner
 
-  @zone_map Config.roon!(:zone_map)
-
   def list_zones do
     url = url("/listZones")
 
@@ -37,7 +35,7 @@ defmodule Powerbot.RoonClient do
   end
 
   defp zone_id(nil), do: Rooner.zone_id()
-  defp zone_id(z), do: Map.fetch!(@zone_map, z)
+  defp zone_id(z), do: :zone_map |> Config.roon!() |> Map.fetch!(z)
 
   defp url("/" <> path, zone_id \\ nil) do
     zid_part = zone_id && "?zoneId=#{zone_id}"

@@ -1,7 +1,6 @@
 defmodule Powerbot.P12 do
   @moduledoc "For controlling my PS Audio DirectStream Power Plant 12"
 
-  @host Config.p12!(:host)
   @toggle_path "/zones.cgi?zone="
 
   require Logger
@@ -74,5 +73,5 @@ defmodule Powerbot.P12 do
     end
   end
 
-  defp url(path), do: "http://#{@host}#{path}"
+  defp url(path), do: "http://#{Config.p12!(:host)}#{path}"
 end

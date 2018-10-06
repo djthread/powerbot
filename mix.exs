@@ -42,6 +42,7 @@ defmodule Powerbot.Mixfile do
       {:ex_config, git: "https://github.com/djthread/ex_config.git"},
       {:tesla, "~> 1.0.0"},
       {:distillery, "~> 2.0"},
+      {:toml, "~> 0.1.0"},
       {:jason, "~> 1.1"},
       {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false}
     ]
