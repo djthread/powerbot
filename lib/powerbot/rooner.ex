@@ -66,8 +66,7 @@ defmodule Powerbot.Rooner do
   defp first_present_zone(zones, [to_find | rest]) do
     zone_map = Config.roon!(:zone_map)
 
-    zones
-    |> Enum.filter(fn z ->
+    Enum.filter(zones, fn z ->
       Map.get(z, "zone_id") == zone_map[to_find]
     end)
     |> case do

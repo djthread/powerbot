@@ -17,3 +17,5 @@ erl_crash.dump
 /*.tar.gz
 
 assets/powerbot*
+
+/.elixir_ls
