@@ -33,7 +33,7 @@ defmodule Powerbot.Mixfile do
       {:gettext, "~> 0.11"},
       {:plug_cowboy, "~> 2.0"},
       {:ex_config, git: "https://github.com/djthread/ex_config.git"},
-      {:tesla, "~> 1.0.0"},
+      {:tesla, "~> 1.2.0"},
       {:distillery, "~> 2.0"},
       {:toml, "~> 0.1.0"},
       {:jason, "~> 1.1"},

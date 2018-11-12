@@ -40,6 +40,7 @@ defmodule PowerbotWeb.Router do
 
     scope "/roon" do
       post "/zone", RoonController, :zone
+      post "/switch", RoonController, :switch
       post "/play-pause", RoonController, :play_pause
       post "/next", RoonController, :next
       post "/previous", RoonController, :previous

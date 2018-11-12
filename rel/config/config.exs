@@ -17,8 +17,6 @@ config :powerbot, :roon,
   base_url: System.get_env("ROON_BASE_URL" || "https://roon-api"),
   find_zone_delay:
     String.to_integer(System.get_env("ROON_FIND_ZONE_DELAY") || "10"),
-  # default_zone: :dave
-  # zones: [:dave, :da_dave],
   zones: [
     dave: [
       "1601f06ee3ecdab4007f17fc1f92c20112ff", # dave

@@ -17,14 +17,11 @@ defmodule Powerbot.Rooner do
       second zone id and I just want to recognize both.
     """
     defstruct ~w(zone zone_id zones base_url)a
-    # find_zone_delay
-    # * `:default_zone` - Zone name as atom to use as default
 
     @type t :: %__MODULE__{
             zone: atom,
-            zone_id: String.t,
+            zone_id: String.t(),
             zones: keyword([String.t()]),
-            # find_zone_delay: integer,
             base_url: String.t()
           }
   end
@@ -39,8 +36,20 @@ defmodule Powerbot.Rooner do
 
   def state(key \\ nil) do
     state = GenServer.call(__MODULE__, :state)
-    if key, do: state[key], else: state
+    if key, do: Map.get(state, key), else: state
   end
+
+  @doc "Attach to the first zone available"
+  def find_zone, do: GenServer.call(__MODULE__, :find_zone)
+
+  @doc "Switch to the next zone"
+  def switch, do: GenServer.call(__MODULE__, :switch)
+
+  def play_pause, do: GenServer.call(__MODULE__, {:action, "/play_pause"})
+
+  def next, do: GenServer.call(__MODULE__, {:action, "/next"})
+
+  def previous, do: GenServer.call(__MODULE__, {:action, "/previous"})
 
   def init(state) do
     Logger.info("State: #{inspect(state)}")
@@ -53,20 +62,38 @@ defmodule Powerbot.Rooner do
     {:reply, state, state}
   end
 
-  def handle_info(:find_zone, %{zone_id: old_zid} = state) do
-    %{zone_id: zid} = state = find_zone(state)
-
-    if zid != old_zid, do: Logger.info("Rooner: New zone: #{zid}")
-
-    # Process.send_after(self(), :find_zone, state.find_zone_delay * 1_000)
-
-    {:noreply, state}
+  def handle_call(:switch, _from, state) do
+    state = find_zone(state, after: state.zone)
+    ret = %{zone: state.zone, zone_id: state.zone_id}
+    {:reply, ret, state}
   end
 
-  defp find_zone(state) do
+  def handle_call({:action, path}, _from, state) do
+    case RoonClient.call(path, state.zone_id) do
+      {:ok, foo} ->
+        {:reply, foo, state}
+
+      bad ->
+        Logger.debug("Error calling #{path}: #{inspect(bad)}")
+        {:reply, :error, state}
+    end
+  end
+
+  def handle_call(:find_zone, _from, state) do
+    state = find_zone(state)
+    ret = %{zone: state.zone, zone_id: state.zone_id}
+    {:reply, ret, state}
+  end
+
+  def handle_info(:find_zone, state) do
+    {:noreply, find_zone(state)}
+  end
+
+  defp find_zone(%{zone_id: old_zid} = state, opts \\ []) do
     with {:ok, %{"zones" => zones}} <- RoonClient.list_zones(),
-         {:ok, {name, id}} <- first_present_zone(zones, state.zones) do
-      %{state | zone: name, zone_id: id}
+         {:ok, {zone, zid}} <- first_present_zone(zones, state.zones, opts) do
+      if zid != old_zid, do: Logger.info("Rooner: New zone: #{zone} (#{zid})")
+      %{state | zone: zone, zone_id: zid}
     else
       :not_found ->
         state
@@ -77,39 +104,36 @@ defmodule Powerbot.Rooner do
     end
   end
 
-  defp first_present_zone(found_zones, wanted_zones)
+  # use option `:after` set to a zone name atom we should ignore.
+  defp first_present_zone(found_zones, zones, opts) do
+    wanted_zone_ids =
+      Enum.reduce(zones, [], fn {zone, ids}, acc ->
+        if zone == Keyword.get(opts, :after),
+          do: acc,
+          else: acc ++ ids
+      end)
 
-  defp first_present_zone(zones, [{zone, ids} | rest]) do
-    Enum.map(zones, fn z -> Map.get(z, "zone_id") end)
-    |> Enum.filter(fn z -> z in ids end)
+    Enum.map(found_zones, fn z -> Map.get(z, "zone_id") end)
+    |> Enum.filter(fn z -> z in wanted_zone_ids end)
     |> case do
-      [zid] -> {:ok, {zone, zid}}
-      [] -> first_present_zone(zones, rest)
+      [zid | _] -> {:ok, {zone_by_id(zones, zid), zid}}
+      [] -> :not_found
     end
   end
 
-  defp first_present_zone(_, []) do
-    :not_found
+  defp zone_by_id(zones, zid) do
+    case Enum.filter(zones, fn {_name, ids} -> zid in ids end) do
+      [{name, _}] -> name
+      [] -> nil
+    end
   end
 
   defp state_from_opts!(opts) do
     %State{
       base_url: Keyword.fetch!(opts, :base_url),
-      zones: conf_zones!(Keyword.get(opts, :zones, :undefined)),
-      # find_zone_delay:
-      #   conf_find_zone_delay!(Keyword.get(opts, :find_zone_delay, 10)),
+      zones: conf_zones!(Keyword.get(opts, :zones, :undefined))
     }
   end
-
-  # defp conf_find_zone_delay!(d) when d > 0, do: d
-
-  # defp conf_find_zone_delay!(d) when byte_size(d) > 0 do
-  #   {del, ""} = Integer.parse(d)
-  #   del
-  # end
-
-  # defp conf_find_zone_delay!(d),
-  #   do: raise(ArgumentError, "Bad find_zone_delay: #{inspect(d)}")
 
   defp conf_zones!(z) when byte_size(z) > 0, do: decode_zones_config(z)
   defp conf_zones!(z) when is_list(z), do: z
