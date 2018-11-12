@@ -16,26 +16,23 @@ defmodule Powerbot.RoonClient do
     end
   end
 
-  def play_pause(zone \\ nil),
-    do: do_call("/play_pause", zone)
+  def play_pause(zid \\ nil),
+    do: do_call("/play_pause", zid)
 
-  def next(zone \\ nil),
-    do: do_call("/next", zone)
+  def next(zid \\ nil),
+    do: do_call("/next", zid)
 
-  def previous(zone \\ nil),
-    do: do_call("/previous", zone)
+  def previous(zid \\ nil),
+    do: do_call("/previous", zid)
 
-  defp do_call(path, zone) do
-    zid = zone_id(zone)
+  defp do_call(path, zid) do
+    zid = if zid, do: zid, else: Rooner.zone_id()
 
     {:ok, %Tesla.Env{status: 200, body: body}} =
       path |> url(zid) |> Tesla.get()
 
     Jason.decode(body)
   end
-
-  defp zone_id(nil), do: Rooner.zone_id()
-  defp zone_id(z), do: :zone_map |> Config.roon!() |> Map.fetch!(z)
 
   defp url("/" <> path, zone_id \\ nil) do
     zid_part = zone_id && "?zoneId=#{zone_id}"

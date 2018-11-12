@@ -5,77 +5,132 @@ defmodule Powerbot.Rooner do
   alias Powerbot.RoonClient
   require Logger
 
-  @initial_state %{zone: nil}
+  defmodule State do
+    @moduledoc """
+    Rooner state
 
-  def child_spec([]) do
-    %{id: __MODULE__, start: {__MODULE__, :start_link, [@initial_state]}}
+    * `:zone` - Tuple of {zone name atom, zone id string} for the active zone
+    * `:zones` - Map of zone names as atoms to lists of zone ids as strings. I
+      did this because my Dave sometimes randomly shows up as a second zone id
+      and I just want to recognize both.
+    """
+    defstruct ~w(zone zones find_zone_delay base_url)a
+    # * `:default_zone` - Zone name as atom to use as default
+
+    @type t :: %__MODULE__{
+            zone: String.t(),
+            zones: %{atom: [String.t()]},
+            find_zone_delay: integer,
+            base_url: String.t()
+          }
   end
 
-  def start_link(state) do
-    GenServer.start_link(__MODULE__, state, name: __MODULE__)
+  def child_spec(opts) do
+    initial_state = state_from_opts!(opts)
+    %{id: __MODULE__, start: {__MODULE__, :start_link, [initial_state]}}
   end
+
+  def start_link(state),
+    do: GenServer.start_link(__MODULE__, state, name: __MODULE__)
+
+  def zone, do: GenServer.call(__MODULE__, :zone)
 
   def zone_id do
-    GenServer.call(__MODULE__, :zone_id)
+    {_, zid} = zone()
+    zid
   end
 
   def init(state) do
-    Logger.info("""
-    Zones: #{inspect(Config.roon!(:zones))}
-    Zone Map: #{inspect(Config.roon!(:zone_map))}
-    Find Zone Delay: #{inspect(Config.roon!(:find_zone_delay))}
-    Base URL: #{inspect(Config.roon!(:base_url))}
-    """)
+    Logger.info("State: #{inspect(state)}")
 
     Process.send_after(self(), :find_zone, 0)
     {:ok, state}
   end
 
-  def handle_call(:zone_id, _from, %{zone: zone} = state) do
-    {:reply, Config.roon!(:zone_map)[zone], state}
+  def handle_call(:zone, _from, %{zone: zone} = state) do
+    {:reply, zone, state}
   end
 
   def handle_info(:find_zone, %{zone: old_zone} = state) do
-    new_zone = find_zone()
-    state = Map.put(state, :zone, new_zone)
+    %{zone: {_, zid}} = state = find_zone(state)
 
-    if new_zone != old_zone,
-      do: Logger.info("Rooner: New zone: #{new_zone}")
+    old_zid = with {_, z} <- old_zone, do: z
 
-    delay = Config.roon!(:find_zone_delay) * 1_000
-    Process.send_after(self(), :find_zone, delay)
+    if zid != old_zid, do: Logger.info("Rooner: New zone: #{zid}")
+
+    Process.send_after(self(), :find_zone, state.find_zone_delay * 1_000)
 
     {:noreply, state}
   end
 
-  defp find_zone do
+  defp find_zone(state) do
     with {:ok, %{"zones" => zones}} <- RoonClient.list_zones(),
-         wanted_zones <- Config.roon!(:zones),
-         {:ok, zone} <- first_present_zone(zones, wanted_zones) do
-      zone
+         {:ok, zone} <- first_present_zone(zones, state.zones) do
+      %{state | zone: zone}
     else
       :not_found ->
-        nil
+        state
 
       {:error, msg} ->
         Logger.error("Rooner.find_zone fail: #{msg}")
-        nil
+        state
     end
   end
 
-  defp first_present_zone(zones, [to_find | rest]) do
-    zone_map = Config.roon!(:zone_map)
+  defp first_present_zone(found_zones, wanted_zones)
 
-    Enum.filter(zones, fn z ->
-      Map.get(z, "zone_id") == zone_map[to_find]
-    end)
+  defp first_present_zone(zones, [{zone, ids} | rest]) do
+    Enum.map(zones, fn z -> Map.get(z, "zone_id") end)
+    |> Enum.filter(fn z -> z in ids end)
     |> case do
-      [_] -> {:ok, to_find}
+      [zid] -> {:ok, {zone, zid}}
       [] -> first_present_zone(zones, rest)
     end
   end
 
   defp first_present_zone(_, []) do
     :not_found
+  end
+
+  defp state_from_opts!(opts) do
+    %State{
+      base_url: Keyword.fetch!(opts, :base_url),
+      zones: conf_zones!(Keyword.get(opts, :zones, :undefined)),
+      find_zone_delay:
+        conf_find_zone_delay!(Keyword.get(opts, :find_zone_delay, 10)),
+    }
+  end
+
+  defp conf_find_zone_delay!(d) when d > 0, do: d
+
+  defp conf_find_zone_delay!(d) when byte_size(d) > 0 do
+    {del, ""} = Integer.parse(d)
+    del
+  end
+
+  defp conf_find_zone_delay!(d),
+    do: raise(ArgumentError, "Bad find_zone_delay: #{inspect(d)}")
+
+  defp conf_zones!(z) when byte_size(z) > 0, do: decode_zones_config(z)
+  defp conf_zones!(z) when is_list(z), do: z
+  defp conf_zones!(z), do: raise(ArgumentError, "Bad zones: #{inspect(z)}")
+
+  # iex> decode_map_of_lists("a:[123,456];b:[789]")
+  # [a: ["123", "456"], b: ["789"]]
+  @spec decode_zones_config(String.t()) :: keyword([String.t()])
+  defp decode_zones_config(str) do
+    Enum.reduce(String.split(str, ";"), [], fn part, acc ->
+      [k, list_str] = String.split(part, ":")
+
+      list =
+        list_str
+        |> String.trim_leading("[")
+        |> String.trim_trailing("]")
+        |> String.split(",")
+        |> Enum.map(&String.to_atom/1)
+
+      [{String.to_atom(k), list} | acc]
+    end)
+    |> Enum.reverse()
   end
 end

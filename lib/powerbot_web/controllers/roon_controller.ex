@@ -5,7 +5,8 @@ defmodule PowerbotWeb.RoonController do
   alias Powerbot.{Rooner, RoonClient}
 
   def zone(conn, _) do
-    {:ok, ret} = Rooner.zone_id()
+    {:ok, {zone, zid}} = Rooner.zone()
+    ret = %{zone: zone, zid: zid}
     json(conn, ret)
   end
 

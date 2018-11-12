@@ -7,8 +7,8 @@ defmodule Powerbot.Application do
     import Supervisor.Spec
 
     children = [
-      Powerbot.Rooner,
-      supervisor(Endpoint, [])
+      {Powerbot.Rooner, Application.get_env(:powerbot, :roon)},
+      Endpoint
     ]
 
     opts = [strategy: :one_for_one, name: Powerbot.Supervisor]

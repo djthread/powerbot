@@ -7,6 +7,8 @@ config :powerbot, PowerbotWeb.Endpoint,
   render_errors: [view: PowerbotWeb.ErrorView, accepts: ~w(html json)],
   pubsub: [name: Powerbot.PubSub, adapter: Phoenix.PubSub.PG2]
 
+config :phoenix, :json_library, Jason
+
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:user_id]
