@@ -9,18 +9,22 @@ defmodule Powerbot.Rooner do
     @moduledoc """
     Rooner state
 
-    * `:zone` - Tuple of {zone name atom, zone id string} for the active zone
-    * `:zones` - Map of zone names as atoms to lists of zone ids as strings. I
-      did this because my Dave sometimes randomly shows up as a second zone id
-      and I just want to recognize both.
+    * `:base_url` - http/s url for the roon api. No trailing slash.
+    * `:zone` - Zone name atom for the active zone
+    * `:zone_id` - Zone id string for the active zone
+    * `:zones` - Keyword list of zone names as atoms to lists of zone ids as
+      strings. I did this because my Dave sometimes randomly shows up as a
+      second zone id and I just want to recognize both.
     """
-    defstruct ~w(zone zones find_zone_delay base_url)a
+    defstruct ~w(zone zone_id zones base_url)a
+    # find_zone_delay
     # * `:default_zone` - Zone name as atom to use as default
 
     @type t :: %__MODULE__{
-            zone: String.t(),
-            zones: %{atom: [String.t()]},
-            find_zone_delay: integer,
+            zone: atom,
+            zone_id: String.t,
+            zones: keyword([String.t()]),
+            # find_zone_delay: integer,
             base_url: String.t()
           }
   end
@@ -33,11 +37,9 @@ defmodule Powerbot.Rooner do
   def start_link(state),
     do: GenServer.start_link(__MODULE__, state, name: __MODULE__)
 
-  def zone, do: GenServer.call(__MODULE__, :zone)
-
-  def zone_id do
-    {_, zid} = zone()
-    zid
+  def state(key \\ nil) do
+    state = GenServer.call(__MODULE__, :state)
+    if key, do: state[key], else: state
   end
 
   def init(state) do
@@ -47,26 +49,24 @@ defmodule Powerbot.Rooner do
     {:ok, state}
   end
 
-  def handle_call(:zone, _from, %{zone: zone} = state) do
-    {:reply, zone, state}
+  def handle_call(:state, _from, state) do
+    {:reply, state, state}
   end
 
-  def handle_info(:find_zone, %{zone: old_zone} = state) do
-    %{zone: {_, zid}} = state = find_zone(state)
-
-    old_zid = with {_, z} <- old_zone, do: z
+  def handle_info(:find_zone, %{zone_id: old_zid} = state) do
+    %{zone_id: zid} = state = find_zone(state)
 
     if zid != old_zid, do: Logger.info("Rooner: New zone: #{zid}")
 
-    Process.send_after(self(), :find_zone, state.find_zone_delay * 1_000)
+    # Process.send_after(self(), :find_zone, state.find_zone_delay * 1_000)
 
     {:noreply, state}
   end
 
   defp find_zone(state) do
     with {:ok, %{"zones" => zones}} <- RoonClient.list_zones(),
-         {:ok, zone} <- first_present_zone(zones, state.zones) do
-      %{state | zone: zone}
+         {:ok, {name, id}} <- first_present_zone(zones, state.zones) do
+      %{state | zone: name, zone_id: id}
     else
       :not_found ->
         state
@@ -96,20 +96,20 @@ defmodule Powerbot.Rooner do
     %State{
       base_url: Keyword.fetch!(opts, :base_url),
       zones: conf_zones!(Keyword.get(opts, :zones, :undefined)),
-      find_zone_delay:
-        conf_find_zone_delay!(Keyword.get(opts, :find_zone_delay, 10)),
+      # find_zone_delay:
+      #   conf_find_zone_delay!(Keyword.get(opts, :find_zone_delay, 10)),
     }
   end
 
-  defp conf_find_zone_delay!(d) when d > 0, do: d
+  # defp conf_find_zone_delay!(d) when d > 0, do: d
 
-  defp conf_find_zone_delay!(d) when byte_size(d) > 0 do
-    {del, ""} = Integer.parse(d)
-    del
-  end
+  # defp conf_find_zone_delay!(d) when byte_size(d) > 0 do
+  #   {del, ""} = Integer.parse(d)
+  #   del
+  # end
 
-  defp conf_find_zone_delay!(d),
-    do: raise(ArgumentError, "Bad find_zone_delay: #{inspect(d)}")
+  # defp conf_find_zone_delay!(d),
+  #   do: raise(ArgumentError, "Bad find_zone_delay: #{inspect(d)}")
 
   defp conf_zones!(z) when byte_size(z) > 0, do: decode_zones_config(z)
   defp conf_zones!(z) when is_list(z), do: z

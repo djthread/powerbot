@@ -26,7 +26,7 @@ defmodule Powerbot.RoonClient do
     do: do_call("/previous", zid)
 
   defp do_call(path, zid) do
-    zid = if zid, do: zid, else: Rooner.zone_id()
+    zid = if zid, do: zid, else: Rooner.state(:zone_id)
 
     {:ok, %Tesla.Env{status: 200, body: body}} =
       path |> url(zid) |> Tesla.get()

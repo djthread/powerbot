@@ -2,11 +2,11 @@ defmodule PowerbotWeb.RoonController do
   @moduledoc "Control Roon!"
 
   use PowerbotWeb, :controller
-  alias Powerbot.{Rooner, RoonClient}
+  alias Powerbot.{RoonClient, Rooner}
 
   def zone(conn, _) do
-    {:ok, {zone, zid}} = Rooner.zone()
-    ret = %{zone: zone, zid: zid}
+    {:ok, state} = Rooner.state()
+    ret = %{zone: state.zone, zone_id: state.zone_id}
     json(conn, ret)
   end
 

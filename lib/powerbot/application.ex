@@ -4,8 +4,6 @@ defmodule Powerbot.Application do
   alias PowerbotWeb.Endpoint
 
   def start(_type, _args) do
-    import Supervisor.Spec
-
     children = [
       {Powerbot.Rooner, Application.get_env(:powerbot, :roon)},
       Endpoint
