@@ -1,1 +1,1 @@
-hello world
+<%= url(@conn) %> hello world

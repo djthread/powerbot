@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Powerbot UI">
     <meta name="author" content="Adam">
+    <link rel="stylesheet" type="text/css" href="/css/app.css">
 
     <title>Powerbot</title>
     <%# <link rel="icon" type="image/gif" href="/images/favicon.gif" /> %>
