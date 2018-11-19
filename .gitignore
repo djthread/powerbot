@@ -19,3 +19,5 @@ erl_crash.dump
 assets/powerbot*
 
 /.elixir_ls
+/.vscode
+/assets/node_modules

@@ -74,7 +74,7 @@ defmodule Powerbot.Rooner do
         {:reply, foo, state}
 
       bad ->
-        Logger.debug("Error calling #{path}: #{inspect(bad)}")
+        Logger.debug(fn -> "Error calling #{path}: #{inspect(bad)}" end)
         {:reply, :error, state}
     end
   end
@@ -113,7 +113,8 @@ defmodule Powerbot.Rooner do
           else: acc ++ ids
       end)
 
-    Enum.map(found_zones, fn z -> Map.get(z, "zone_id") end)
+    found_zones
+    |> Enum.map(fn z -> Map.get(z, "zone_id") end)
     |> Enum.filter(fn z -> z in wanted_zone_ids end)
     |> case do
       [zid | _] -> {:ok, {zone_by_id(zones, zid), zid}}
@@ -131,30 +132,7 @@ defmodule Powerbot.Rooner do
   defp state_from_opts!(opts) do
     %State{
       base_url: Keyword.fetch!(opts, :base_url),
-      zones: conf_zones!(Keyword.get(opts, :zones, :undefined))
+      zones: Keyword.fetch!(opts, :zones)
     }
-  end
-
-  defp conf_zones!(z) when byte_size(z) > 0, do: decode_zones_config(z)
-  defp conf_zones!(z) when is_list(z), do: z
-  defp conf_zones!(z), do: raise(ArgumentError, "Bad zones: #{inspect(z)}")
-
-  # iex> decode_map_of_lists("a:[123,456];b:[789]")
-  # [a: ["123", "456"], b: ["789"]]
-  @spec decode_zones_config(String.t()) :: keyword([String.t()])
-  defp decode_zones_config(str) do
-    Enum.reduce(String.split(str, ";"), [], fn part, acc ->
-      [k, list_str] = String.split(part, ":")
-
-      list =
-        list_str
-        |> String.trim_leading("[")
-        |> String.trim_trailing("]")
-        |> String.split(",")
-        |> Enum.map(&String.to_atom/1)
-
-      [{String.to_atom(k), list} | acc]
-    end)
-    |> Enum.reverse()
   end
 end

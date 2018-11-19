@@ -1,0 +1,7 @@
+[powerbot]
+
+"PowerbotWeb.Endpoint".http.port = "${PORT}"
+"PowerbotWeb.Endpoint".url.port = "${PORT}"
+"PowerbotWeb.Endpoint".url.host = "${HOSTNAME}"
+
+roon.zones = "${ROON_ZONES}"
