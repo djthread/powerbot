@@ -1,1 +1,20 @@
-<%= url(@conn) %> hello world
+<h2>DAVE Rig</h2>
+
+<div class="container set1">
+  <div class="columns">
+    <div class="column col-6">
+      <a href="/api/p12/on/0">ON</a>
+    </div>
+    <div class="column col-6">
+      <a href="/api/p12/off/0">OFF</a>
+    </div>
+  </div>
+</div>
+
+<div class="container set2">
+  <div class="columns">
+    <div class="column col-12">
+      <a href="/api/roon/play-pause">Toggle</a>
+    </div>
+  </div>
+</div>
