@@ -1,6 +1,6 @@
 defmodule Powerbot.Rooner do
   @moduledoc """
-  Tracks the zone_id I want to control.
+  Tracks the zone I want to control.
   """
   alias Powerbot.RoonClient
   require Logger
@@ -10,19 +10,18 @@ defmodule Powerbot.Rooner do
     Rooner state
 
     * `:base_url` - http/s url for the roon api. No trailing slash.
-    * `:zone` - Zone name atom for the active zone
+    * `:zone` - Zone display name string for the active zone
     * `:zone_id` - Zone id string for the active zone
-    * `:zones` - Keyword list of zone names as atoms to lists of zone ids as
-      strings. I did this because my Dave sometimes randomly shows up as a
-      second zone id and I just want to recognize both.
+    * `:wanted_zone_names` - List of strings corresponding to the display names
+      for the zones we are interested in toggling between.
     """
-    defstruct ~w(zone zone_id zones base_url)a
+    defstruct ~w(zone zone_id wanted_zone_names base_url)a
 
     @type t :: %__MODULE__{
-            zone: atom,
+            base_url: String.t(),
+            zone: String.t(),
             zone_id: String.t(),
-            zones: keyword([String.t()]),
-            base_url: String.t()
+            wanted_zone_names: [String.t()],
           }
   end
 
@@ -81,7 +80,7 @@ defmodule Powerbot.Rooner do
 
   def handle_call(:find_zone, _from, state) do
     state = find_zone(state)
-    ret = %{zone: state.zone, zone_id: state.zone_id}
+    ret = %{zone: state.zone, zone_name: state.zone_name}
     {:reply, ret, state}
   end
 
@@ -91,7 +90,7 @@ defmodule Powerbot.Rooner do
 
   defp find_zone(%{zone_id: old_zid} = state, opts \\ []) do
     with {:ok, %{"zones" => zones}} <- RoonClient.list_zones(),
-         {:ok, {zone, zid}} <- first_present_zone(zones, state.zones, opts) do
+         {:ok, {zone, zid}} <- first_present_zone(zones, state.wanted_zone_names, opts) do
       if zid != old_zid, do: Logger.info("Rooner: New zone: #{zone} (#{zid})")
       %{state | zone: zone, zone_id: zid}
     else
@@ -105,34 +104,30 @@ defmodule Powerbot.Rooner do
   end
 
   # use option `:after` set to a zone name atom we should ignore.
-  defp first_present_zone(found_zones, zones, opts) do
-    wanted_zone_ids =
-      Enum.reduce(zones, [], fn {zone, ids}, acc ->
-        if zone == Keyword.get(opts, :after),
-          do: acc,
-          else: acc ++ ids
-      end)
+  defp first_present_zone(found_zones, wanted_zone_names, opts) do
+    wanted_zone_names =
+      case Keyword.fetch(opts, :after) do
+        {:ok, bye} -> Enum.reject(wanted_zone_names, &(&1 == bye))
+        :error -> wanted_zone_names
+      end
 
     found_zones
-    |> Enum.map(fn z -> Map.get(z, "zone_id") end)
-    |> Enum.filter(fn z -> z in wanted_zone_ids end)
+    |> Enum.map(fn z ->
+      id = Map.get(z, "zone_id")
+      name = Map.get(z, "display_name")
+      {name, id}
+    end)
+    |> Enum.filter(fn {z, _} -> z in wanted_zone_names end)
     |> case do
-      [zid | _] -> {:ok, {zone_by_id(zones, zid), zid}}
+      [{name, zid} | _] -> {:ok, {name, zid}}
       [] -> :not_found
-    end
-  end
-
-  defp zone_by_id(zones, zid) do
-    case Enum.filter(zones, fn {_name, ids} -> zid in ids end) do
-      [{name, _}] -> name
-      [] -> nil
     end
   end
 
   defp state_from_opts!(opts) do
     %State{
       base_url: Keyword.fetch!(opts, :base_url),
-      zones: Keyword.fetch!(opts, :zones)
+      wanted_zone_names: Keyword.fetch!(opts, :zones)
     }
   end
 end
