@@ -26,10 +26,13 @@ defmodule PowerbotWeb.Router do
     scope "/system" do
       post("/on", SystemController, :on)
       post("/off", SystemController, :off)
+      post("/audio-on", SystemController, :audio_on)
+      post("/audio-off", SystemController, :audio_off)
     end
 
     scope "/p12" do
       get("/status", P12Controller, :status)
+      get("/query/:zone", P12Controller, :query)
       post("/on/:zones", P12Controller, :on)
       post("/off/:zones", P12Controller, :off)
     end

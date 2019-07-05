@@ -7,6 +7,7 @@ defmodule Powerbot.P12 do
 
   defmodule Status do
     @moduledoc "Status struct"
+    @derive Jason.Encoder
     defstruct ~w(power zone1 zone2 zone3 zone4)a
   end
 
